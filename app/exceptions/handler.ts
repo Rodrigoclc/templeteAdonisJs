@@ -20,17 +20,8 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       (error as any).code === 'E_VALIDATION_ERROR'
     ) {
       const errorObj = error as any
-      console.log('Validation Error Object:', {
-        code: errorObj.code,
-        message: errorObj.message,
-        errors: errorObj.errors,
-        messages: errorObj.messages,
-        keys: Object.keys(errorObj),
-      })
-
-      const errorMessages = this.extractErrorMessages(
-        errorObj.errors || errorObj.messages || []
-      )
+      // Transform Vine error objects into user friendly Portuguese messages
+      const errorMessages = this.extractErrorMessages(errorObj.errors || errorObj.messages || [])
       return ctx.response.status(422).send(
         new ApiResponse(
           false,
@@ -52,9 +43,59 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       return []
     }
 
+    const fieldNames: Record<string, string> = {
+      email: 'e-mail',
+      password: 'senha',
+      currentPassword: 'senha atual',
+      newPassword: 'nova senha',
+      name: 'nome',
+      role: 'função',
+      token: 'token',
+    }
+
     return errors
-      .map((error: any) => error.message)
-      .filter((message: any) => typeof message === 'string')
+      .map((err: any) => {
+        // err expected shape: { message, rule, field }
+        const rule = err.rule
+        const field = err.field || err.key || ''
+        const prettyField = fieldNames[field] || this.humanizeField(field)
+
+        switch (rule) {
+          case 'required':
+            return `O campo ${prettyField} é obrigatório`
+          case 'email':
+            return `O campo ${prettyField} deve ser um e-mail válido`
+          case 'minLength': {
+            // attempt to extract number from original message
+            const m = String(err.message).match(/\d+/)
+            const min = m ? m[0] : 'o valor mínimo'
+            return `O campo ${prettyField} deve ter pelo menos ${min} caracteres`
+          }
+          case 'confirmed':
+            return `A confirmação de ${prettyField} não confere`
+          case 'enum':
+            return `O campo ${prettyField} possui um valor inválido`
+          default:
+            // fallback to original message if available
+            return typeof err.message === 'string' ? err.message : `Erro no campo ${prettyField}`
+        }
+      })
+      .filter((m: any) => typeof m === 'string')
+  }
+
+  /**
+   * Convert camelCase or snake_case field into human readable Portuguese-ish text
+   */
+  private humanizeField(field: string): string {
+    if (!field) return field
+    // split camelCase and snake_case
+    const parts = field
+      .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+      .replace(/[-\.]/g, '_')
+      .split('_')
+      .filter(Boolean)
+      .map((p) => p.toLowerCase())
+    return parts.join(' ')
   }
 
   /**

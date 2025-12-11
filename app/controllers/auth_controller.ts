@@ -1,6 +1,5 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { ApiResponse } from '../dto/api_response.js'
-import logger from '#services/logger_service'
 import { inject } from '@adonisjs/core'
 import AuthService from '#services/auth_service'
 import {
