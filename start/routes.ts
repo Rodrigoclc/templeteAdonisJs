@@ -30,6 +30,7 @@ router
     router.post('auth/reset-password', [AuthController, 'resetPassword'])
   })
   .prefix('/api/v1')
+  .use(middleware.validateException())
 
   // Rotas protegidas por autenticação
 router
@@ -40,4 +41,4 @@ router
     router.post('auth/change-password', [AuthController, 'changePassword'])
   })
   .prefix('/api/v1')
-  .use(middleware.auth())
+  .use([middleware.auth(), middleware.validateException()])

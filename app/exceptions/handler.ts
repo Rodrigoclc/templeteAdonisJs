@@ -1,5 +1,6 @@
 import app from '@adonisjs/core/services/app'
 import { HttpContext, ExceptionHandler } from '@adonisjs/core/http'
+import { ApiResponse } from '#dto/api_response'
 
 export default class HttpExceptionHandler extends ExceptionHandler {
   /**
@@ -13,7 +14,47 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
+    // Handle Vine validation errors
+    if (
+      error instanceof Error &&
+      (error as any).code === 'E_VALIDATION_ERROR'
+    ) {
+      const errorObj = error as any
+      console.log('Validation Error Object:', {
+        code: errorObj.code,
+        message: errorObj.message,
+        errors: errorObj.errors,
+        messages: errorObj.messages,
+        keys: Object.keys(errorObj),
+      })
+
+      const errorMessages = this.extractErrorMessages(
+        errorObj.errors || errorObj.messages || []
+      )
+      return ctx.response.status(422).send(
+        new ApiResponse(
+          false,
+          'Validation failed',
+          undefined,
+          errorMessages
+        )
+      )
+    }
+
     return super.handle(error, ctx)
+  }
+
+  /**
+   * Extract error messages from Vine validation errors
+   */
+  private extractErrorMessages(errors: any): string[] {
+    if (!Array.isArray(errors)) {
+      return []
+    }
+
+    return errors
+      .map((error: any) => error.message)
+      .filter((message: any) => typeof message === 'string')
   }
 
   /**

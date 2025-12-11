@@ -43,4 +43,5 @@ router.use([
  */
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
+  validateException: () => import('#middleware/validation_exception_middleware'),
 })
