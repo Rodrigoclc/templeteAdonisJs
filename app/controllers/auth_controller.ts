@@ -10,12 +10,14 @@ import {
   resetPasswordValidator,
   updateUserValidator,
 } from '#validators/user'
+import logger from '#services/logger_service'
 
 @inject()
 export default class AuthController {
   constructor(protected authService: AuthService) {}
 
   async login({ request, response, auth }: HttpContext) {
+    logger.info('Login attempt', { email: request.input('email') })
     const payload = await request.validateUsing(loginValidator)
     const result = await this.authService.login(auth, payload)
     return response.ok(
@@ -27,6 +29,10 @@ export default class AuthController {
   }
 
   async store({ request, response, auth }: HttpContext) {
+    logger.info('Attempt to create user', {
+      payload: request.all(),
+      admin: auth.user?.email,
+    })
     const payload = await request.validateUsing(createUserAsAdminValidator)
     const user = await this.authService.store(
       auth.user?.email || null,
@@ -43,6 +49,7 @@ export default class AuthController {
   }
 
   async logout({ auth, response }: HttpContext) {
+    logger.info('User logout', { user: auth.user?.email })
     await this.authService.logout(auth)
     return response.ok(new ApiResponse(true, 'Logout realizado com sucesso.'))
   }
@@ -53,6 +60,7 @@ export default class AuthController {
   }
 
   async forgotPassword({ request, response }: HttpContext) {
+    logger.info('Forgot password request', { email: request.input('email') })
     const { email } = await request.validateUsing(forgotPasswordValidator)
     await this.authService.forgotPassword(email)
     return response.ok(
@@ -61,6 +69,7 @@ export default class AuthController {
   }
 
   async resetPassword({ request, response }: HttpContext) {
+    logger.info('Reset password attempt', { email: request.input('email') })
     const payload = await request.validateUsing(resetPasswordValidator)
     await this.authService.resetPassword(payload)
     return response.ok(new ApiResponse(true, 'Senha redefinida com sucesso.'))
@@ -101,6 +110,7 @@ export default class AuthController {
   }
 
   async changePassword({ request, response, auth }: HttpContext) {
+    logger.info('Change password attempt', { user: auth.user?.email })
     const payload = await request.validateUsing(changePasswordValidator)
     await this.authService.changePassword(auth, payload)
     return response.ok(new ApiResponse(true, 'Senha alterada com sucesso.'))
