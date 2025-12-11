@@ -1,5 +1,5 @@
 {
-  "name": "templeteAdonisJs",
+  "name": "templete-adonisjs",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -23,7 +23,8 @@
     "#events/*": "./app/events/*.js",
     "#middleware/*": "./app/middleware/*.js",
     "#validators/*": "./app/validators/*.js",
-    "#providers/*": "./providers/*.js",
+    "#contracts/*": "./app/contracts/*.js",
+    "#dto/*": "./app/dto/*.js",
     "#policies/*": "./app/policies/*.js",
     "#abilities/*": "./app/abilities/*.js",
     "#database/*": "./database/*.js",

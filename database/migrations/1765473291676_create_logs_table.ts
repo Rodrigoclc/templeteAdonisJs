@@ -6,31 +6,31 @@ export default class extends BaseSchema {
   async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.bigIncrements('id').primary()
-      
+
       // Log metadata
       table.enum('level', ['debug', 'info', 'warn', 'error']).notNullable()
       table.string('message', 255).notNullable()
       table.text('data').nullable() // JSON data context
       table.text('stack_trace').nullable() // Stack trace for errors
-      
+
       // User context
       table.bigInteger('user_id').unsigned().nullable()
       table.string('user_email', 255).nullable()
       table.string('user_role', 10).nullable()
-      
+
       // Request context
       table.string('request_method', 10).nullable() // GET, POST, PUT, DELETE, etc
       table.string('request_url', 500).nullable()
       table.integer('response_status').nullable()
       table.string('request_id', 50).nullable() // For distributed tracing
-      
+
       // Resource context
       table.string('resource_type', 50).nullable() // 'vehicle', 'refueling', 'user', etc
       table.bigInteger('resource_id').unsigned().nullable()
-      
+
       // Performance metrics
       table.integer('duration_ms').nullable() // Request duration in milliseconds
-      
+
       // Timestamps
       table
         .timestamp('created_at', { useTz: false })

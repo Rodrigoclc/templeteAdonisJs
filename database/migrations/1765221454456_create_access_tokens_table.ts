@@ -7,8 +7,8 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       // O ID desta tabela (tokens) pode permanecer como incremento (integer),
       // pois ele é apenas uma PK interna para o token, e não a PK do usuário.
-      table.increments('id') 
-      
+      table.increments('id')
+
       // 🚨 MUDANÇA CRUCIAL AQUI:
       // 1. O tipo deve ser 'uuid', e não 'integer().unsigned()'.
       // 2. Não precisa de 'notNullable()', pois a referência é a que deve garantir a existência.

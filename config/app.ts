@@ -2,6 +2,7 @@ import env from '#start/env'
 import app from '@adonisjs/core/services/app'
 import { Secret } from '@adonisjs/core/helpers'
 import { defineConfig } from '@adonisjs/core/http'
+import AuthService from '#services/auth_service'
 
 /**
  * The app key is used for encrypting cookies, generating signed URLs,
@@ -38,3 +39,5 @@ export const http = defineConfig({
     sameSite: 'lax',
   },
 })
+
+app.container.singleton(AuthService, () => new AuthService())

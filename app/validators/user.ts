@@ -27,3 +27,30 @@ export const updateUserValidator = vine.compile(
     active: vine.boolean().optional(),
   })
 )
+
+export const loginValidator = vine.compile(
+  vine.object({
+    email: vine.string().email().normalizeEmail(),
+    password: vine.string(),
+  })
+)
+
+export const forgotPasswordValidator = vine.compile(
+  vine.object({
+    email: vine.string().email().normalizeEmail(),
+  })
+)
+
+export const resetPasswordValidator = vine.compile(
+  vine.object({
+    token: vine.string(),
+    password: vine.string().minLength(8).confirmed(),
+  })
+)
+
+export const changePasswordValidator = vine.compile(
+  vine.object({
+    currentPassword: vine.string(),
+    newPassword: vine.string().minLength(8).confirmed(),
+  })
+)
