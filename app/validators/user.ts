@@ -51,6 +51,6 @@ export const resetPasswordValidator = vine.compile(
 export const changePasswordValidator = vine.compile(
   vine.object({
     currentPassword: vine.string(),
-    newPassword: vine.string().minLength(8).confirmed(),
+    newPassword: vine.string().minLength(8),
   })
 )

@@ -9,6 +9,7 @@
 
 import AuthController from '#controllers/auth_controller'
 import router from '@adonisjs/core/services/router'
+import { middleware } from './kernel.js'
 
 router.get('/', async () => {
   return {
@@ -29,3 +30,14 @@ router
     router.post('auth/reset-password', [AuthController, 'resetPassword'])
   })
   .prefix('/api/v1')
+
+  // Rotas protegidas por autenticação
+router
+  .group(() => {
+    // Auth
+    router.post('auth/logout', [AuthController, 'logout'])
+    router.get('auth/profile', [AuthController, 'profile'])
+    router.post('auth/change-password', [AuthController, 'changePassword'])
+  })
+  .prefix('/api/v1')
+  .use(middleware.auth())
