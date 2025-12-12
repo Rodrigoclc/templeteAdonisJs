@@ -15,24 +15,31 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    */
   async handle(error: unknown, ctx: HttpContext) {
     // Handle Vine validation errors
-    if (
-      error instanceof Error &&
-      (error as any).code === 'E_VALIDATION_ERROR'
-    ) {
+    if (error instanceof Error && (error as any).code === 'E_VALIDATION_ERROR') {
       const errorObj = error as any
       // Transform Vine error objects into user friendly Portuguese messages
       const errorMessages = this.extractErrorMessages(errorObj.errors || errorObj.messages || [])
-      return ctx.response.status(422).send(
-        new ApiResponse(
-          false,
-          'Validation failed',
-          undefined,
-          errorMessages
-        )
-      )
+      return ctx.response
+        .status(422)
+        .send(new ApiResponse(false, 'Falha na validação', undefined, errorMessages))
     }
 
-    return super.handle(error, ctx)
+    let status = 500
+    let message = 'Ocorreu um erro inesperado.'
+
+    if (error instanceof Error) {
+      status = (error as any).status || 500
+      message = error.message
+    } else if (typeof error === 'string') {
+      message = error
+    }
+
+    // Do not expose sensitive error details in production
+    if (status >= 500 && !this.debug) {
+      message = 'Ocorreu um erro interno no servidor.'
+    }
+
+    return ctx.response.status(status).send(new ApiResponse(false, message, undefined, undefined))
   }
 
   /**
