@@ -8,6 +8,7 @@
 */
 
 import AuthController from '#controllers/auth_controller'
+import UserController from '#controllers/user_controller'
 import router from '@adonisjs/core/services/router'
 import { middleware } from './kernel.js'
 
@@ -32,7 +33,7 @@ router
   .prefix('/api/v1')
   .use(middleware.validateException())
 
-  // Rotas protegidas por autenticação
+// Rotas protegidas por autenticação
 router
   .group(() => {
     // Auth
@@ -41,4 +42,17 @@ router
     router.post('auth/change-password', [AuthController, 'changePassword'])
   })
   .prefix('/api/v1')
+  .use([middleware.auth(), middleware.validateException()])
+
+// Rotas de Usuários
+router
+  .group(() => {
+    router.post('/', [UserController, 'store'])
+    router.get('/:id', [UserController, 'show'])
+    router.get('/', [UserController, 'index'])
+    router.delete('/:id', [UserController, 'destroy'])
+    router.patch('/status/:id', [UserController, 'updateStatus'])
+    router.put('/:id', [UserController, 'update'])
+  })
+  .prefix('/api/v1/users')
   .use([middleware.auth(), middleware.validateException()])

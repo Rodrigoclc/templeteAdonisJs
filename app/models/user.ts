@@ -24,10 +24,22 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare email: string
 
   @column()
-  declare role: 'admin' | 'manager' | 'operator'
+  declare cpf: string
+
+  @column()
+  declare phone: string
+
+  @column()
+  declare role: 'admin' | 'coordinator' | 'operator'
 
   @column()
   declare active: boolean
+
+  @column()
+  declare observations: string | null
+
+  @column()
+  declare $isDeleted: boolean
 
   @column({ serializeAs: null })
   declare password: string

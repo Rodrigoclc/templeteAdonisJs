@@ -8,9 +8,13 @@ export default class extends BaseSchema {
       table.uuid('id').primary().defaultTo(this.raw('uuid_generate_v4()'))
       table.string('name', 255).notNullable()
       table.string('email', 255).notNullable().unique()
+      table.string('cpf', 11).notNullable().unique()
+      table.string('phone', 11).nullable().unique()
       table.string('password', 255).notNullable()
-      table.string('role', 10).notNullable().checkIn(['admin', 'manager', 'operator'])
+      table.string('role', 10).notNullable().checkIn(['admin', 'coordinator', 'operator'])
+      table.text('observations').nullable()
       table.boolean('active').notNullable().defaultTo(true)
+      table.boolean('is_deleted').notNullable().defaultTo(false)
       table.timestamp('last_login', { useTz: false })
 
       table

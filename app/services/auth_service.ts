@@ -1,13 +1,10 @@
 import User from '#models/user'
-import { Pagination } from '../dto/pagination.js'
 import { AuthServiceInterface } from '../interfaces/auth_service_interface.js'
 import { inject } from '@adonisjs/core'
 import {
   changePasswordValidator,
-  createUserAsAdminValidator,
   loginValidator,
   resetPasswordValidator,
-  updateUserValidator,
 } from '#validators/user'
 import { Infer } from '@vinejs/vine/types'
 import hash from '@adonisjs/core/services/hash'
@@ -50,56 +47,6 @@ export default class AuthService implements AuthServiceInterface {
       { userEmail: user.email }
     )
     return { token, user }
-  }
-
-  async store(
-    userEmail: string | null,
-    userRole: string | null,
-    payload: Infer<typeof createUserAsAdminValidator>
-  ): Promise<User> {
-    loggerService.info(
-      'User creation requested',
-      { email: payload.email, role: payload.role },
-      { userEmail: userEmail, userRole: userRole }
-    )
-
-    const existingUser = await User.findBy('email', payload.email)
-    if (existingUser) {
-      loggerService.warn(
-        'User creation failed: email already exists',
-        { email: payload.email },
-        { userEmail: userEmail, userRole: userRole }
-      )
-      throw new Error('O e-mail já está em uso.')
-    }
-
-    const defaultPassword = env.get('DEFAULT_USER_PASSWORD')
-    const hashedPassword = defaultPassword
-
-    const user = new User()
-    user.fill({
-      name: payload.name,
-      email: payload.email,
-      password: hashedPassword,
-      role: payload.role,
-    })
-
-    await user.save()
-
-    await EmailService.sendWelcomeEmail(user)
-
-    loggerService.info(
-      'User created successfully',
-      {
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-      { userEmail: userEmail, userRole: userRole }
-    )
-
-    return user
   }
 
   async logout(auth: HttpContext['auth']): Promise<void> {
@@ -149,77 +96,6 @@ export default class AuthService implements AuthServiceInterface {
     user.password = password
     await user.save()
     await tokenRecord.delete()
-  }
-
-  async index(page: number, perPage: number): Promise<Pagination<User>> {
-    const users = await User.query().paginate(page, perPage)
-    return {
-      data: users.all(),
-      pagination: {
-        currentPage: users.currentPage,
-        itemsPerPage: users.perPage,
-        totalRecords: users.total,
-        totalPages: users.lastPage,
-      },
-    }
-  }
-
-  async destroy(userEmail: string | null, userRole: string | null, userId: string): Promise<void> {
-    loggerService.info('User deletion requested', { userId }, { userEmail, userRole })
-
-    const user = await User.findOrFail(userId)
-
-    await user.delete()
-
-    loggerService.info(
-      'User deleted successfully',
-      { userId, email: user.email },
-      { userEmail, userRole }
-    )
-  }
-
-  async updateStatus(
-    userEmail: string | null,
-    userRole: string | null,
-    userId: string
-  ): Promise<User> {
-    loggerService.info('User status update requested', { userId }, { userEmail, userRole })
-
-    const user = await User.findOrFail(userId)
-    user.active = !user.active
-    await user.save()
-
-    loggerService.info(
-      'User status updated',
-      { userId, active: user.active },
-      { userEmail, userRole }
-    )
-    return user
-  }
-
-  async update(
-    userEmail: string | null,
-    userRole: string | null,
-    userId: string,
-    payload: Infer<typeof updateUserValidator>
-  ): Promise<User> {
-    loggerService.info('User update requested', { userId }, { userEmail, userRole })
-
-    const user = await User.findOrFail(userId)
-    user.merge(payload)
-    await user.save()
-
-    loggerService.info(
-      'User updated successfully',
-      {
-        userId: user.id,
-        email: user.email,
-        role: user.role,
-      },
-      { userEmail, userRole }
-    )
-
-    return user
   }
 
   async changePassword(

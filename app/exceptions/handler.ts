@@ -82,6 +82,8 @@ export default class HttpExceptionHandler extends ExceptionHandler {
             return `A confirmação de ${prettyField} não confere`
           case 'enum':
             return `O campo ${prettyField} possui um valor inválido`
+          case 'notEqualsDefault':
+            return `Verifique seu email e troque a senha padrão antes de continuar.`
           default:
             // fallback to original message if available
             return typeof err.message === 'string' ? err.message : `Erro no campo ${prettyField}`

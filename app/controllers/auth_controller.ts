@@ -4,13 +4,12 @@ import { inject } from '@adonisjs/core'
 import AuthService from '#services/auth_service'
 import {
   changePasswordValidator,
-  createUserAsAdminValidator,
   forgotPasswordValidator,
   loginValidator,
   resetPasswordValidator,
-  updateUserValidator,
 } from '#validators/user'
 import logger from '#services/logger_service'
+import env from '#start/env'
 
 @inject()
 export default class AuthController {
@@ -19,32 +18,27 @@ export default class AuthController {
   async login({ request, response, auth }: HttpContext) {
     logger.info('Login attempt', { email: request.input('email') })
     const payload = await request.validateUsing(loginValidator)
+    // Ensure the provided password is not equal to the default password
+    const defaultPassword = env.get('DEFAULT_USER_PASSWORD')
+    console.log("DEFAULT_USER_PASSWORD",defaultPassword)
+    if (defaultPassword && payload.password === defaultPassword) {
+      const err: any = new Error('Falha na validação')
+      err.code = 'E_VALIDATION_ERROR'
+      err.errors = [
+        {
+          field: 'password',
+          rule: 'notEqualsDefault',
+          message: 'Verifique seu email e troque a senha padrão antes de continuar.',
+        },
+      ]
+      throw err
+    }
     const result = await this.authService.login(auth, payload)
     return response.ok(
       new ApiResponse(true, 'Usuário autenticado com sucesso.', {
         token: result.token,
         user: result.user,
       })
-    )
-  }
-
-  async store({ request, response, auth }: HttpContext) {
-    logger.info('Attempt to create user', {
-      payload: request.all(),
-      admin: auth.user?.email,
-    })
-    const payload = await request.validateUsing(createUserAsAdminValidator)
-    const user = await this.authService.store(
-      auth.user?.email || null,
-      auth.user?.role || null,
-      payload
-    )
-    return response.created(
-      new ApiResponse(
-        true,
-        'Usuário criado com sucesso. Um e-mail de definição de senha foi enviado.',
-        user
-      )
     )
   }
 
@@ -73,40 +67,6 @@ export default class AuthController {
     const payload = await request.validateUsing(resetPasswordValidator)
     await this.authService.resetPassword(payload)
     return response.ok(new ApiResponse(true, 'Senha redefinida com sucesso.'))
-  }
-
-  async index({ request, response }: HttpContext) {
-    const page = request.input('page', 1)
-    const perPage = request.input('perPage', 10)
-    const pagination = await this.authService.index(page, perPage)
-    return response.ok(new ApiResponse(true, 'Usuários listados com sucesso.', pagination))
-  }
-
-  async destroy({ response, auth, params }: HttpContext) {
-    await this.authService.destroy(auth.user?.email || null, auth.user?.role || null, params.id)
-    return response.ok(new ApiResponse(true, 'Usuário excluído com sucesso.'))
-  }
-
-  async updateStatus({ response, auth, params }: HttpContext) {
-    const user = await this.authService.updateStatus(
-      auth.user?.email || null,
-      auth.user?.role || null,
-      params.id
-    )
-    return response.ok(
-      new ApiResponse(true, `Usuário ${user.active ? 'ativado' : 'inativado'} com sucesso.`)
-    )
-  }
-
-  async update({ request, response, auth, params }: HttpContext) {
-    const payload = await request.validateUsing(updateUserValidator)
-    const user = await this.authService.update(
-      auth.user?.email || null,
-      auth.user?.role || null,
-      params.id,
-      payload
-    )
-    return response.ok(new ApiResponse(true, 'Usuário atualizado com sucesso.', user))
   }
 
   async changePassword({ request, response, auth }: HttpContext) {
